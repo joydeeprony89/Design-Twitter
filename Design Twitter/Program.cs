@@ -9,16 +9,16 @@ namespace Design_Twitter
     static void Main(string[] args)
     {
       Twitter twitter = new Twitter();
-      //twitter.PostTweet(1, 5);
-      //var feeds = twitter.GetNewsFeed(1);
-      //Console.WriteLine(string.Join(",", feeds));
-      //twitter.Follow(1, 2);
-      //twitter.PostTweet(2, 6);
-      //feeds = twitter.GetNewsFeed(1);
-      //Console.WriteLine(string.Join(",", feeds));
-      //twitter.Unfollow(1, 2);
-      //feeds = twitter.GetNewsFeed(1);
-      //Console.WriteLine(string.Join(",", feeds));
+      twitter.PostTweet(1, 5);
+      var feeds = twitter.GetNewsFeed(1);
+      Console.WriteLine(string.Join(",", feeds));
+      twitter.Follow(1, 2);
+      twitter.PostTweet(2, 6);
+      feeds = twitter.GetNewsFeed(1);
+      Console.WriteLine(string.Join(",", feeds));
+      twitter.Unfollow(1, 2);
+      feeds = twitter.GetNewsFeed(1);
+      Console.WriteLine(string.Join(",", feeds));
       twitter.PostTweet(1, 1);
       var feeds = twitter.GetNewsFeed(1);
       twitter.Follow(2, 1);
@@ -30,6 +30,7 @@ namespace Design_Twitter
 
   public class Twitter
   {
+    // This comparer will be taken care to put the newest tweet at the top of the sortedSet.
     public class MaxHeap : IComparer<Tweet>
     {
       public int Compare(Tweet a, Tweet b)
@@ -40,6 +41,7 @@ namespace Design_Twitter
       }
     }
 
+    // Tweet class has a tweet Id and the time when tweet is created
     public class Tweet
     {
       public int TweetId;
@@ -52,6 +54,8 @@ namespace Design_Twitter
       }
     }
 
+    // This is our in memory table.
+    // This will hold the user information, list of user tweets and follwing's list
     public Dictionary<int, (SortedSet<Tweet>, List<int>)> table;
     public Twitter()
     {
@@ -73,14 +77,15 @@ namespace Design_Twitter
     public IList<int> GetNewsFeed(int userId)
     {
       var feeds = new SortedSet<Tweet>(new MaxHeap());
-      // own tweets
       if (!table.ContainsKey(userId)) return new List<int>();
+      // get user own tweets.
       var (userOwnTweets, following) = table[userId];
+      // Add them into the feed.
       foreach (var utweet in userOwnTweets)
       {
         feeds.Add(utweet);
       }
-      // get following people tweets
+      // get user following people tweets.
       foreach (int celeb in following)
       {
         // get celeb tweets
@@ -116,13 +121,4 @@ namespace Design_Twitter
       table[followerId] = (tweets, following);
     }
   }
-
-  /**
-   * Your Twitter object will be instantiated and called as such:
-   * Twitter obj = new Twitter();
-   * obj.PostTweet(userId,tweetId);
-   * IList<int> param_2 = obj.GetNewsFeed(userId);
-   * obj.Follow(followerId,followeeId);
-   * obj.Unfollow(followerId,followeeId);
-   */
 }
