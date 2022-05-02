@@ -19,12 +19,12 @@ namespace Design_Twitter
       twitter.Unfollow(1, 2);
       feeds = twitter.GetNewsFeed(1);
       Console.WriteLine(string.Join(",", feeds));
-      twitter.PostTweet(1, 1);
-      var feeds = twitter.GetNewsFeed(1);
-      twitter.Follow(2, 1);
-      feeds = twitter.GetNewsFeed(2);
-      twitter.Unfollow(2, 1);
-      feeds = twitter.GetNewsFeed(2);
+      //twitter.PostTweet(1, 1);
+      //var feeds = twitter.GetNewsFeed(1);
+      //twitter.Follow(2, 1);
+      //feeds = twitter.GetNewsFeed(2);
+      //twitter.Unfollow(2, 1);
+      //feeds = twitter.GetNewsFeed(2);
     }
   }
 
@@ -56,21 +56,22 @@ namespace Design_Twitter
 
     // This is our in memory table.
     // This will hold the user information, list of user tweets and follwing's list
-    public Dictionary<int, (SortedSet<Tweet>, List<int>)> table;
+    public Dictionary<int, (List<Tweet>, List<int>)> table;
     public Twitter()
     {
-      table = new Dictionary<int, (SortedSet<Tweet>, List<int>)>();
+      table = new Dictionary<int, (List<Tweet>, List<int>)>();
     }
 
     public void PostTweet(int userId, int tweetId)
     {
       if (!table.ContainsKey(userId))
       {
-        table[userId] = (new SortedSet<Tweet>(new MaxHeap()), new List<int>());
+        table[userId] = (new List<Tweet>(), new List<int>());
       }
 
       var (tweets, following) = table[userId];
-      tweets.Add(new Tweet(tweetId, DateTime.Now));
+      // new tweet always add to the top.
+      tweets.Insert(0, new Tweet(tweetId, DateTime.Now));
       table[userId] = (tweets, following);
     }
 
@@ -80,20 +81,20 @@ namespace Design_Twitter
       if (!table.ContainsKey(userId)) return new List<int>();
       // get user own tweets.
       var (userOwnTweets, following) = table[userId];
-      // Add them into the feed.
-      foreach (var utweet in userOwnTweets)
+      // Add them into the feed. take only top 10
+      foreach (var utweet in userOwnTweets.Take(10))
       {
         feeds.Add(utweet);
       }
-      // get user following people tweets.
+      // get user following people tweets. 
       foreach (int celeb in following)
       {
-        // get celeb tweets
+        // get celeb tweets 
         if (table.ContainsKey(celeb))
         {
           var (celeTweets, _) = table[celeb];
-          // add these tweets in user tweet list
-          foreach (Tweet t in celeTweets)
+          // add these tweets in user tweet list, take only top 10
+          foreach (Tweet t in celeTweets.Take(10))
             feeds.Add(t);
         }
       }
@@ -106,7 +107,7 @@ namespace Design_Twitter
     {
       if (!table.ContainsKey(followerId))
       {
-        table[followerId] = (new SortedSet<Tweet>(new MaxHeap()), new List<int>());
+        table[followerId] = (new List<Tweet>(), new List<int>());
       }
 
       var (tweets, following) = table[followerId];
