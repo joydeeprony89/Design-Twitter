@@ -122,4 +122,75 @@ namespace Design_Twitter
       table[followerId] = (tweets, following);
     }
   }
+
+
+
+  public class TwitterSimple
+  {
+    Dictionary<int, HashSet<(int tweet, int time)>> tweets;
+    Dictionary<int, HashSet<int>> iAmFollowing;
+    int time;
+    public TwitterSimple()
+    {
+      tweets = new Dictionary<int, HashSet<(int tweet, int time)>>();
+      iAmFollowing = new Dictionary<int, HashSet<int>>();
+      time = 1;
+    }
+
+    public void PostTweet(int userId, int tweetId)
+    {
+      if (!tweets.ContainsKey(userId)) tweets.Add(userId, new HashSet<(int tweet, int time)>());
+      tweets[userId].Add((tweetId, time++));
+    }
+
+    public IList<int> GetNewsFeed(int userId)
+    {
+      var result = new List<int>();
+      // get people whom I am following
+      var celebs = iAmFollowing.ContainsKey(userId) ? iAmFollowing[userId] : null;
+      // get my tweets
+      var myTweets = tweets.ContainsKey(userId) ? tweets[userId] : null;
+      var allTweets = new List<(int tweet, int time)>();
+      if (myTweets != null)
+        allTweets.AddRange(myTweets.ToList());
+      // get celebs tweets
+      if (celebs != null)
+      {
+        foreach (var celeb in celebs)
+        {
+          var celebsTweets = tweets.ContainsKey(celeb) ? tweets[celeb] : null;
+          if (celebsTweets != null)
+            allTweets.AddRange(celebsTweets.ToList());
+        }
+      }
+      //  Tweets must be ordered from most recent to least recent.
+      result = allTweets.OrderByDescending(twt => twt.time).Take(10).Select(twt => twt.tweet).ToList();
+      return result;
+
+    }
+
+    public void Follow(int followerId, int followeeId)
+    {
+      if (!iAmFollowing.ContainsKey(followerId)) iAmFollowing.Add(followerId, new HashSet<int>());
+      iAmFollowing[followerId].Add(followeeId);
+    }
+
+    public void Unfollow(int followerId, int followeeId)
+    {
+      if (iAmFollowing.ContainsKey(followerId))
+      {
+        var peopleIAmFollowing = iAmFollowing[followerId];
+        peopleIAmFollowing.Remove(followeeId);
+      }
+    }
+  }
+
+  /**
+   * Your Twitter object will be instantiated and called as such:
+   * Twitter obj = new Twitter();
+   * obj.PostTweet(userId,tweetId);
+   * IList<int> param_2 = obj.GetNewsFeed(userId);
+   * obj.Follow(followerId,followeeId);
+   * obj.Unfollow(followerId,followeeId);
+   */
 }
